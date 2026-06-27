@@ -24,8 +24,9 @@ export const OUTPUT_SAMPLE_RATE = 24000; // 模型返回：24kHz PCM16
 export const IDLE_HANGUP_MS = 45_000;
 
 // 是否开启麦克风回声消除。
-// ⚠️ Windows 上开启 echoCancellation 会把 Chrome 音频强制路由到"通信设备"，
-// 常导致通话期间整体没声音。所以默认关闭，先保证能听到声音。
-// （将来墙上 iPad 同时开麦克风+外放时，可能需要重新开启以防小圆听到自己。）
+// 默认开启：目标设备是 iPhone（外放+麦克风），不开的话麦克风会录到小圆自己的声音，
+// 被 Gemini 当成"孩子插话"而打断，导致小圆说一秒就停。iPhone 的回声消除很好，开启即可。
+// ⚠️ 仅在 Windows/Chrome 桌面调试时，开启可能把音频路由到"通信设备"导致没声音；
+// 那种情况下用环境变量 NEXT_PUBLIC_VOICE_ECHO_CANCEL=false 临时关闭。
 export const ECHO_CANCEL =
-  process.env.NEXT_PUBLIC_VOICE_ECHO_CANCEL === "true";
+  process.env.NEXT_PUBLIC_VOICE_ECHO_CANCEL !== "false";
