@@ -1,0 +1,427 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #fdf3ff;
+  --bg-speaking: #e9ddff;
+  --ink: #3a2b4a;
+  --accent: #7c5cff;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body {
+  color: var(--ink);
+  font-family: "Comic Sans MS", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+/* 全屏舞台：墙上 iPad 使用，背景在小圆说话时闪烁 */
+.stage {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+/* 顶部 HUD：星星 + 等级 + 分科奖牌墙 */
+.hud {
+  padding: 16px 28px 10px;
+}
+.hud-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 28px;
+  font-weight: bold;
+}
+.hud .stars span { color: var(--accent); }
+
+/* 等级 + 进度条 */
+.level {
+  min-width: 180px;
+  transition: transform 200ms ease;
+}
+.level-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 24px;
+}
+.level-sub { font-size: 16px; color: #9b8bbf; font-weight: bold; }
+.level-bar {
+  margin-top: 4px;
+  height: 12px;
+  background: #e7ddf7;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.level-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #b79bff, var(--accent));
+  border-radius: 999px;
+  transition: width 500ms ease;
+}
+.level.level-up {
+  animation: levelPop 1.8s ease;
+}
+@keyframes levelPop {
+  0%, 100% { transform: scale(1); }
+  20% { transform: scale(1.18); }
+  40% { transform: scale(1); }
+}
+
+/* 分科目奖牌墙 */
+.badge-wall {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.badge-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 2px solid #ece3fb;
+  border-radius: 999px;
+  padding: 5px 12px 5px 8px;
+}
+.badge-item.is-locked { opacity: 0.5; }
+.badge-medal { font-size: 22px; }
+.badge-subject { font-size: 16px; font-weight: bold; color: var(--ink); }
+
+/* 中部：角色 + 气泡 */
+.center {
+  flex: 1;
+  min-height: 0; /* 允许压缩，避免把底部输入框挤出屏幕 */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 0 24px;
+}
+.bubble {
+  max-width: 680px;
+  background: #fff;
+  border: 3px solid var(--accent);
+  border-radius: 28px;
+  padding: 20px 28px;
+  font-size: 28px;
+  line-height: 1.5;
+  text-align: center;
+  box-shadow: 0 8px 0 rgba(124, 92, 255, 0.18);
+}
+
+/* 角色：OpenMoji 圆脸，多套表情叠放切换 */
+.character {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  transform-origin: 50% 80%;
+  animation: floatIdle 4s ease-in-out infinite;
+}
+.face-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: opacity 80ms linear;
+}
+
+/* 待机：轻轻浮动 */
+@keyframes floatIdle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(-1deg); }
+}
+/* 说话：点头 + 轻微左右摆 */
+.character.is-speaking {
+  animation: headTalk 600ms ease-in-out infinite;
+}
+@keyframes headTalk {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-6px) rotate(2deg); }
+}
+/* 思考：歪头 */
+.character.is-thinking {
+  animation: headTilt 2.2s ease-in-out infinite;
+}
+@keyframes headTilt {
+  0%, 100% { transform: rotate(-6deg); }
+  50% { transform: rotate(4deg); }
+}
+
+/* 语音主按钮（M2） */
+.voice-btn {
+  font-size: 28px;
+  font-weight: bold;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  padding: 18px 44px;
+  cursor: pointer;
+  box-shadow: 0 6px 0 rgba(124, 92, 255, 0.3);
+  transition: transform 120ms ease, background 200ms ease;
+}
+.voice-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(124, 92, 255, 0.3); }
+.voice-btn:disabled { opacity: 0.5; cursor: default; }
+.voice-btn.is-on {
+  background: #ff6b6b;
+  box-shadow: 0 6px 0 rgba(255, 107, 107, 0.35);
+  animation: pulseOn 1.4s ease-in-out infinite;
+}
+@keyframes pulseOn {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+/* 语音中小圆触发的屏幕画图 */
+.voice-visual {
+  position: relative;
+  background: #fff;
+  border: 3px solid var(--accent);
+  border-radius: 24px;
+  padding: 18px 22px;
+  box-shadow: 0 10px 28px rgba(124, 92, 255, 0.22);
+  max-width: 680px;
+}
+.voice-visual-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 18px;
+  border: none;
+  background: transparent;
+  color: #b3a6cc;
+  cursor: pointer;
+}
+
+/* 小圆把聊到的事物显示在屏幕上（大图） */
+.thing-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  border: 3px solid var(--accent);
+  border-radius: 28px;
+  padding: 22px 40px;
+  box-shadow: 0 10px 28px rgba(124, 92, 255, 0.22);
+  animation: applePop 360ms ease both;
+}
+.thing-emoji { font-size: 120px; line-height: 1.1; }
+.thing-flag {
+  width: 220px;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #e3d9f5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+.thing-label { font-size: 26px; font-weight: bold; margin-top: 10px; }
+@media (max-width: 480px), (max-height: 760px) {
+  .thing-emoji { font-size: 88px; }
+  .thing-flag { width: 160px; }
+  .thing-label { font-size: 20px; }
+}
+
+.action-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.challenge-btn {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--accent);
+  background: #fff;
+  border: 3px solid var(--accent);
+  border-radius: 999px;
+  padding: 14px 32px;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+.challenge-btn:active { transform: translateY(2px); }
+
+/* 数学挑战弹层 */
+.challenge-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(60, 40, 80, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+}
+.challenge-card {
+  position: relative;
+  background: #fff;
+  border-radius: 32px;
+  padding: 28px 32px 32px;
+  width: min(560px, 100%);
+  box-shadow: 0 18px 50px rgba(60, 40, 80, 0.3);
+  text-align: center;
+}
+.challenge-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-size: 22px;
+  border: none;
+  background: transparent;
+  color: #b3a6cc;
+  cursor: pointer;
+}
+.challenge-title {
+  font-size: 26px;
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+/* 计数可视化（通用物品） */
+.cv-groups,
+.cv-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0 16px;
+}
+.cv-part-wrap { display: flex; align-items: center; gap: 12px; }
+.cv-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 8px 10px;
+  background: #fff7fb;
+  border: 2px dashed #ffc1d6;
+  border-radius: 16px;
+  justify-content: center;
+}
+.cv-single { margin: 10px auto 16px; max-width: 460px; }
+.cv-plus { font-size: 30px; font-weight: bold; color: var(--accent); }
+.cv-item {
+  font-size: 30px;
+  display: inline-block;
+  animation: applePop 360ms ease both;
+}
+.cv-item.is-leaving {
+  animation: applePop 360ms ease both, flyAway 700ms ease 800ms forwards;
+}
+@keyframes applePop {
+  0% { transform: scale(0) translateY(-8px); opacity: 0; }
+  70% { transform: scale(1.25); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes flyAway {
+  to { transform: translate(16px, -28px) rotate(18deg); opacity: 0.15; }
+}
+
+.challenge-story {
+  font-size: 26px;
+  font-weight: bold;
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+.challenge-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.choice {
+  font-size: 32px;
+  font-weight: bold;
+  padding: 16px;
+  border: 3px solid #ece3fb;
+  border-radius: 20px;
+  background: #faf7ff;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 100ms ease, background 150ms ease;
+}
+.choice:active { transform: translateY(2px); }
+.choice.is-right { background: #d7f5dd; border-color: #62c878; }
+.choice.is-wrong { background: #ffe0e0; border-color: #ff8a8a; }
+.challenge-feedback {
+  margin-top: 18px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #ff7a7a;
+}
+.challenge-feedback.ok { color: #3bb35a; }
+.challenge-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 14px;
+}
+.challenge-actions button {
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  padding: 10px 24px;
+  cursor: pointer;
+}
+.challenge-actions button.secondary {
+  background: #efeaf9;
+  color: var(--accent);
+}
+
+/* 底部输入（文字后备通道） */
+.composer {
+  display: flex;
+  flex-shrink: 0; /* 永远完整显示 */
+  gap: 12px;
+  padding: 16px 24px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom)); /* iPhone 底部安全区 */
+}
+.composer input { min-width: 0; } /* 防止 flex 子项撑破容器 */
+
+/* 小屏（手机竖屏）：缩小角色和字号，保证一屏装得下 */
+@media (max-width: 480px), (max-height: 760px) {
+  .character { width: 200px; height: 200px; }
+  .center { gap: 14px; }
+  .bubble { font-size: 20px; padding: 14px 18px; border-radius: 22px; }
+  .voice-btn { font-size: 22px; padding: 14px 30px; }
+  .hud { padding: 12px 18px 8px; }
+  .hud-top { font-size: 22px; }
+  .composer input { font-size: 18px; padding: 12px 18px; }
+  .composer button { font-size: 18px; padding: 0 22px; }
+}
+.composer input {
+  flex: 1;
+  font-size: 24px;
+  padding: 16px 22px;
+  border: 3px solid var(--accent);
+  border-radius: 999px;
+  outline: none;
+}
+.composer button {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  padding: 0 32px;
+  cursor: pointer;
+}
+.composer button:disabled { opacity: 0.4; cursor: default; }
