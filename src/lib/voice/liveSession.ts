@@ -129,7 +129,10 @@ export class LiveSession {
     const src = this.micCtx.createMediaStreamSource(this.micStream);
     this.workletNode = new AudioWorkletNode(this.micCtx, "pcm-recorder");
     this.workletNode.port.onmessage = (ev: MessageEvent) => {
-      const b64 = this.toBase64(ev.data as ArrayBuffer);
+      const buf = ev.data as ArrayBuffer;
+      // 孩子真正出声时重置闲置计时（忽略静音/背景），保证互动中不会自己挂断
+      if (this.hasVoice(buf)) this.resetIdle();
+      const b64 = this.toBase64(buf);
       try {
         this.session?.sendRealtimeInput({
           audio: { data: b64, mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}` },
@@ -232,6 +235,16 @@ export class LiveSession {
       // 忽略
     }
     this.cb.onStatus?.("closed");
+  }
+
+  /** 这块麦克风音频里是否有真实人声（RMS 超阈值），用于判断孩子是否在出声 */
+  private hasVoice(buf: ArrayBuffer): boolean {
+    const pcm = new Int16Array(buf);
+    if (pcm.length === 0) return false;
+    let sum = 0;
+    for (let i = 0; i < pcm.length; i++) sum += pcm[i] * pcm[i];
+    const rms = Math.sqrt(sum / pcm.length);
+    return rms > 600; // 静音/背景噪声以下不算
   }
 
   // --- base64 helpers ---

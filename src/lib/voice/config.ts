@@ -20,8 +20,9 @@ export const LIVE_VOICE =
 export const INPUT_SAMPLE_RATE = 16000; // 发送给模型：16kHz PCM16
 export const OUTPUT_SAMPLE_RATE = 24000; // 模型返回：24kHz PCM16
 
-// 闲置多久自动挂断 Live 会话（控制计费）
-export const IDLE_HANGUP_MS = 45_000;
+// 闲置（孩子和小圆都没出声）多久自动挂断 Live 会话（控制计费）。
+// 注意：孩子一出声就会重置（见 liveSession 的 hasVoice），所以这是"真静默"时长。
+export const IDLE_HANGUP_MS = 90_000;
 
 // 是否开启麦克风回声消除。
 // 默认开启：目标设备是 iPhone（外放+麦克风），不开的话麦克风会录到小圆自己的声音，
