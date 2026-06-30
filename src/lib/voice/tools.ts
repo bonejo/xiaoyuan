@@ -96,6 +96,22 @@ const declarations: FunctionDeclaration[] = [
       required: ["emoji"],
     },
   },
+  {
+    name: "note_interest",
+    description:
+      "当你发现多多对某个话题特别感兴趣、很喜欢（liked=true），或明确表示不想要/不喜欢（liked=false）时，调用它记下来。以后开新对话你会更懂他、主动聊他喜欢的。话题用简短词，如 足球、恐龙、数学题、画画。",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        topic: { type: Type.STRING, description: "话题简短词，如 足球、恐龙、数学题" },
+        liked: {
+          type: Type.BOOLEAN,
+          description: "true=喜欢/感兴趣，false=不想要/不喜欢",
+        },
+      },
+      required: ["topic", "liked"],
+    },
+  },
 ];
 
 export const VOICE_TOOLS = [{ functionDeclarations: declarations }];

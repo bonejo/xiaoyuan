@@ -57,6 +57,8 @@ export interface SubjectProgress {
 export interface ProgressState {
   totalStars: number;
   subjects: Record<Subject, SubjectProgress>;
+  /** 兴趣画像：话题 → 权重（正=喜欢，负=不太想要） */
+  interests: Record<string, number>;
 }
 
 export function emptyState(): ProgressState {
@@ -69,5 +71,25 @@ export function emptyState(): ProgressState {
       french: { correct: 0, attempts: 0 },
       social: { correct: 0, attempts: 0 },
     },
+    interests: {},
   };
+}
+
+/** 把兴趣画像整理成一句喂给小圆的话（开新对话时注入） */
+export function buildInterestSummary(interests: Record<string, number>): string {
+  const entries = Object.entries(interests);
+  const liked = entries
+    .filter(([, w]) => w > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([t]) => t);
+  const disliked = entries
+    .filter(([, w]) => w < 0)
+    .sort((a, b) => a[1] - b[1])
+    .slice(0, 4)
+    .map(([t]) => t);
+  const parts: string[] = [];
+  if (liked.length) parts.push(`喜欢：${liked.join("、")}`);
+  if (disliked.length) parts.push(`不太想要：${disliked.join("、")}`);
+  return parts.join("；");
 }

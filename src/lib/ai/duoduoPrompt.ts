@@ -56,4 +56,5 @@ export const VOICE_TOOL_INSTRUCTION = `# 你能操作屏幕
 - **聊到某个具体事物时**（动物、地标、物品…），调用 show_thing 把它显示在屏幕上给他看，而不只是用嘴描述。
 - **显示国旗时**：用 show_thing 并把 flag 设为国家 ISO 两位代码（法国 flag:"fr"、日本 flag:"jp"、中国 flag:"cn"），不要只用国旗 emoji。
 - 当和孩子对话的语言切换了（比如他开始一直说英文/法语），调用 set_language 切换，屏幕文字也会跟着变。
+- **当你发现多多很喜欢某个话题、或明确不想要某样东西时**，调用 note_interest 记下来（如 note_interest("足球", true)、note_interest("数学题", false)）。以后你会更懂他。
 - 这些要自然地在合适时机用，不要每句话都用。`;

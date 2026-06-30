@@ -8,7 +8,7 @@ import { LiveSession, type LiveStatus } from "@/lib/voice/liveSession";
 import { useProgress } from "@/lib/progress/store";
 import { useWakeLock } from "@/lib/useWakeLock";
 import { UI, isLang, type Lang } from "@/lib/i18n";
-import type { Subject } from "@/lib/progress/types";
+import { buildInterestSummary, type Subject } from "@/lib/progress/types";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -50,7 +50,7 @@ export default function Home() {
   const visualTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const thingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { recordAnswer, awardStars } = useProgress();
+  const { state: progress, recordAnswer, awardStars, noteInterest } = useProgress();
   useWakeLock();
   const s = UI[lang]; // 当前语言的界面文案
 
@@ -139,6 +139,10 @@ export default function Home() {
       onVisual: handleVisual,
       onSetLanguage: handleSetLanguage,
       onShowThing: handleShowThing,
+      onNoteInterest: ({ topic, liked }) => {
+        if (typeof topic === "string") noteInterest(topic, liked !== false);
+      },
+      getInterestSummary: () => buildInterestSummary(progress.interests),
     });
     sessionRef.current = session;
     try {

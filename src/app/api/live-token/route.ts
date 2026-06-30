@@ -11,7 +11,7 @@ import { VOICE_TOOLS } from "@/lib/voice/tools";
  * 密钥只在服务端使用；浏览器拿到的是短期、单次、受限的令牌。
  * 会话配置（嗓音 + 小圆人格）锁在令牌里，前端无法篡改。
  */
-export async function POST() {
+export async function POST(request: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return Response.json(
@@ -19,6 +19,23 @@ export async function POST() {
       { status: 500 }
     );
   }
+
+  // 客户端把多多最近的喜好摘要传进来，注入人格，让小圆"记得"
+  let interests = "";
+  try {
+    const body = await request.json();
+    if (typeof body?.interests === "string") interests = body.interests.slice(0, 500);
+  } catch {
+    // 没有 body 也可以
+  }
+
+  const systemText =
+    COMPANION_SYSTEM_PROMPT +
+    "\n\n" +
+    VOICE_TOOL_INSTRUCTION +
+    (interests
+      ? `\n\n# 多多的喜好（记住并主动融入对话，把学习藏进他喜欢的话题）\n${interests}`
+      : "");
 
   try {
     const ai = new GoogleGenAI({ apiKey });
@@ -40,9 +57,7 @@ export async function POST() {
               },
             },
             systemInstruction: {
-              parts: [
-                { text: COMPANION_SYSTEM_PROMPT + "\n\n" + VOICE_TOOL_INSTRUCTION },
-              ],
+              parts: [{ text: systemText }],
             },
             // 联网搜索 + 自定义函数工具共存
             tools: [{ googleSearch: {} }, ...VOICE_TOOLS],

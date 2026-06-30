@@ -58,6 +58,8 @@ interface ProgressContextValue {
   awardStars(n: number): void;
   /** 记录一次答题：答对则加星并累加该科答对数 */
   recordAnswer(subject: Subject, correct: boolean, stars: number): void;
+  /** 记录多多对某话题的喜好（liked=true 加权重，false 减权重） */
+  noteInterest(topic: string, liked: boolean): void;
   reset(): void;
 }
 
@@ -106,22 +108,34 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const noteInterest = useCallback((topic: string, liked: boolean) => {
+    const t = topic.trim();
+    if (!t) return;
+    setState((s) => {
+      const cur = s.interests[t] ?? 0;
+      const next = Math.max(-3, Math.min(5, cur + (liked ? 1 : -1)));
+      return { ...s, interests: { ...s.interests, [t]: next } };
+    });
+  }, []);
+
   const reset = useCallback(() => setState(emptyState()), []);
 
-  // 开发期：挂个测试钩子，方便没接出题前先验证 HUD
+  // 开发期：挂个测试钩子，方便没接语音前先验证
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") {
       (window as unknown as Record<string, unknown>).__duoduo = {
         awardStars,
         recordAnswer,
+        noteInterest,
         reset,
+        getState: () => state,
       };
     }
-  }, [awardStars, recordAnswer, reset]);
+  }, [awardStars, recordAnswer, noteInterest, reset, state]);
 
   return (
     <ProgressContext.Provider
-      value={{ state, awardStars, recordAnswer, reset }}
+      value={{ state, awardStars, recordAnswer, noteInterest, reset }}
     >
       {children}
     </ProgressContext.Provider>

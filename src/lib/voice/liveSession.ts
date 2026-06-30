@@ -22,6 +22,9 @@ export interface LiveCallbacks {
   onVisual?: (args: Record<string, unknown>) => void;
   onSetLanguage?: (lang: string) => void;
   onShowThing?: (args: { emoji?: string; label?: string }) => void;
+  onNoteInterest?: (args: { topic?: string; liked?: boolean }) => void;
+  /** 开新会话时提供多多的喜好摘要，注入小圆人格 */
+  getInterestSummary?: () => string;
 }
 
 // 只取我们用到的字段，避免被 SDK 预览版类型变动影响
@@ -68,8 +71,13 @@ export class LiveSession {
   async start() {
     this.cb.onStatus?.("connecting");
 
-    // 1) 取临时令牌
-    const res = await fetch("/api/live-token", { method: "POST" });
+    // 1) 取临时令牌（把多多的喜好摘要带上，注入小圆人格）
+    const interests = this.cb.getInterestSummary?.() ?? "";
+    const res = await fetch("/api/live-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ interests }),
+    });
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
       throw new Error(d.detail || d.error || "无法获取语音令牌");
@@ -160,6 +168,8 @@ export class LiveSession {
             this.cb.onSetLanguage?.(String((fc.args ?? {}).lang ?? ""));
           else if (fc.name === "show_thing")
             this.cb.onShowThing?.(fc.args ?? {});
+          else if (fc.name === "note_interest")
+            this.cb.onNoteInterest?.(fc.args ?? {});
         } catch {
           // 回调出错不应中断会话
         }
